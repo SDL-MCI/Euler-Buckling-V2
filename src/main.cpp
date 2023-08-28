@@ -56,13 +56,13 @@ void setup()
 
 void fun_reset()
 {   // enables the measurements to be executed successively
+    Serial.flush();
     USB_Timer.end();
     result1 = 0;
     result2 = 0;
     result3 = 0;
     result4 = 0;
     i = 0;
-
 }
 
 void ISR_USB_SEND()
