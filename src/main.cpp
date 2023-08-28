@@ -19,7 +19,7 @@
 ///////////////////////
 
 int8_t rx_buffer[4] = {0};  // receive buffer (USB VCOM)
-char tx_buffer[4] = {0};    // send buffer (USB VCOM)
+char tx_buffer[16] = {0};    // send buffer (USB VCOM)
 float scalingFac = 46200;   // scaling factor (from calibration)
 float result1 = 0;          // Measurement Result ADC 1
 float result2 = 0;          // Measurement Result ADC 2
@@ -67,28 +67,14 @@ void fun_reset()
 
 void ISR_USB_SEND()
 {
-    if ((uint16_t)((dt+1)*80) > i)
+    if ((uint16_t)((dt+1)*20) > i)
     {
-        if ((i+3)%4 == 0)
-        {
-            memcpy(tx_buffer, (const char *)(&result1), 4);      // copy result into the send buffer (deconstruct into bytes of data)
-            Serial.write(tx_buffer, 4);
-        }
-        else if ((i+2)%4 == 0)
-        {
-            memcpy(tx_buffer, (const char *)(&result2), 4);      // copy result into the send buffer (deconstruct into bytes of data)
-            Serial.write(tx_buffer, 4);           
-        }
-        else if ((i+1)%4 == 0)
-        {
-            memcpy(tx_buffer, (const char *)(&result3), 4);      // copy result into the send buffer (deconstruct into bytes of data)
-            Serial.write(tx_buffer, 4);
-        }
-        else if (i%4 == 0)
-        {
-            memcpy(tx_buffer, (const char *)(&result4), 4);      // copy result into the send buffer (deconstruct into bytes of data)
-            Serial.write(tx_buffer, 4);
-        }
+        // Write into 16 character long buffer
+        memmove(&tx_buffer[0], (const char *)(&result1), 4);
+        memmove(&tx_buffer[4], (const char *)(&result2), 4);
+        memmove(&tx_buffer[8], (const char *)(&result3), 4);
+        memmove(&tx_buffer[12], (const char *)(&result4), 4);
+        Serial.write(tx_buffer, 16);
     }
     else
     {
@@ -109,11 +95,11 @@ void serialEvent()
     delay(500);
     Serial.readBytes((char *)rx_buffer, 4); // read serial buffer
     dt = rx_buffer[2];                      // determine duration of the measurement
-    USB_Timer.begin(ISR_USB_SEND, 12500);   // 80 Hz
+    USB_Timer.begin(ISR_USB_SEND, 50000);   // 20 Hz
 }
 
 void loop() {
-    if ((uint16_t)((dt+1)*80) > i)
+    if ((uint16_t)((dt+1)*20) > i)
     {
         result1 = (float)(scale1.get_units(1));
         result2 = (float)(scale2.get_units(1));
