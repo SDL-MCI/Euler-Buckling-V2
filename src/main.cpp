@@ -70,10 +70,10 @@ void ISR_USB_SEND()
     if ((uint16_t)((dt+1)*20) > i)
     {
         // Write into 16 character long buffer
-        memmove(&tx_buffer[0], (const char *)(&result1), 4);
-        memmove(&tx_buffer[4], (const char *)(&result2), 4);
-        memmove(&tx_buffer[8], (const char *)(&result3), 4);
-        memmove(&tx_buffer[12], (const char *)(&result4), 4);
+        memcpy(&tx_buffer[0], (const char *)(&result1), 4);
+        memcpy(&tx_buffer[4], (const char *)(&result2), 4);
+        memcpy(&tx_buffer[8], (const char *)(&result3), 4);
+        memcpy(&tx_buffer[12], (const char *)(&result4), 4);
         Serial.write(tx_buffer, 16);
     }
     else
