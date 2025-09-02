@@ -6,7 +6,7 @@ import threading
 import time  
 
 # ---------- CONFIGURATION ----------
-SERIAL_PORT = "COM3"
+SERIAL_PORT = "COM3" # Anpassen an den verwendeten Port
 BAUD_RATE = 9600
 
 # ---------- PATHS ----------
