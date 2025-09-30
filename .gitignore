@@ -1,0 +1,20 @@
+# ============================
+# Global ignores
+# ============================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE / editor configs (general)
+.vscode/
+.idea/
+*.code-workspace
