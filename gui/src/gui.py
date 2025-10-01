@@ -5,15 +5,23 @@ import serial
 import threading
 import time  
 
+import argparse
+
 # ---------- CONFIGURATION ----------
-SERIAL_PORT = "COM3" # Anpassen an den verwendeten Port
+
+parser = argparse.ArgumentParser("Euler-Versuchsaufbau")
+parser.add_argument("com", help="COM Port to be used for serial connection, defaults to COM3", type=str, nargs="?", default="COM3")
+args = parser.parse_args()
+
+SERIAL_PORT = args.com
 BAUD_RATE = 9600
 
 # ---------- PATHS ----------
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(
-    r"C:\Users\max-n\OneDrive\Dokumente\Projektmitarbeit\Mikrocontroller_Skript\Figma\GUI\build\assets\frame0"
-)
+ASSETS_PATH = (OUTPUT_PATH / Path("../assets/frame0")).resolve()
+
+if not ASSETS_PATH.exists():
+    raise FileNotFoundError(f"Assets-Ordner nicht gefunden: {ASSETS_PATH}")
 
 def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
@@ -35,6 +43,7 @@ def update_needle(canvas, tag, center_x, center_y, angle_deg, length):
 window = Tk()
 window.geometry("923x573")
 window.configure(bg="#FFFFFF")
+window.title("Euler-Kräfteanzeige")
 
 canvas = Canvas(
     window,
@@ -56,10 +65,10 @@ canvas.create_text(82.0, 29.0, anchor="nw", text="Euler Fall 2", fill="#000000",
 entries = []
 entry_positions = [(55.0, 401.0), (361.0, 401.0), (668.0, 401.0)]
 entry_images = ["entry_1.png", "entry_2.png", "entry_3.png"]
-entry_imgs = []
+entry_imgs = []   # Referenzen halten, damit Tkinter sie nicht freigibt
 
 for i, (x, y) in enumerate(entry_positions):
-    img = PhotoImage(file=relative_to_assets(entry_images[i]))
+    img = PhotoImage(file=str(relative_to_assets(entry_images[i])))
     canvas.create_image(x + 101, y + 41, image=img)
     entry_imgs.append(img)
     entry = Label(
@@ -90,7 +99,7 @@ bg_images_data = [
 ]
 bg_refs = []
 for img_name, x, y in bg_images_data:
-    img = PhotoImage(file=relative_to_assets(img_name))
+    img = PhotoImage(file=str(relative_to_assets(img_name)))
     canvas.create_image(x, y, image=img)
     bg_refs.append(img)
 
@@ -109,14 +118,14 @@ front_image_data = [
 for img_name, x, y in front_image_data:
     img = PhotoImage(file=relative_to_assets(img_name))
     canvas.create_image(x, y, image=img)
-    bg_refs.append(img)  # damit sie nicht gelöscht werden
+    bg_refs.append(img)  # Referenzen behalten
 
 # ---------- LOGIC ----------
 def update_gauges(values):
     """Aktualisiert die 3 Anzeigen und Zeiger. Werte werden auf 0–70 begrenzt."""
     for i in range(3):
-        v = max(0, min(values[i], 70))      # Clamp 0–70
-        angle = 240 - (v * 4.2857)          # Start bei 240°, 1 N = 4.2857°
+        v = max(0.0, min(float(values[i]), 70.0)) # Clamp 0–70
+        angle = 240.0 - (v * 4.2857)              # Start bei 240°, 1 N = 4.2857°
         update_needle(canvas, needle_tags[i], *needle_centers[i], angle, 90)
         entries[i].config(text=f"{v:.2f} N")
 
@@ -155,7 +164,6 @@ def read_serial_loop():
         ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
         while True:
             if not running_event.is_set():
-                # pausiert: auf Start warten
                 time.sleep(0.1)
                 continue
             try:
@@ -167,7 +175,7 @@ def read_serial_loop():
                     values = [float(p) for p in parts]
                     window.after(0, update_gauges, values)
             except ValueError:
-                
+                # Zeile nicht parsebar -> ignorieren
                 continue
             except Exception:
                 # Kurz warten bei temporären Problemen
