@@ -1,4 +1,4 @@
 ## Euler Buckling - Sensor Application 
 
 # Installation 
-- ToDo: Update for monorepo
+- ToDo: Update instructiosn for monorepo
